@@ -20,7 +20,7 @@ const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/
 // auth while the user only ever sees/enters a username. The real identifier
 // exposed anywhere in the UI is the username, never this address.
 function usernameToInternalEmail(username: string): string {
-  return `${username.toLowerCase()}@users.prepify.internal`
+  return `${username.toLowerCase()}@users.prepify.app`
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

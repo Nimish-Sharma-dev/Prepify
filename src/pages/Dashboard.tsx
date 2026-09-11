@@ -11,9 +11,9 @@ import type { Chapter, StudyLog, Subject } from '../types/database'
 interface SubjectStats {
   subject: Subject
   total: number
-  completed: number
-  revised: number
-  perfected: number
+  lectures: number
+  notes: number
+  revision: number
 }
 
 export function Dashboard() {
@@ -78,9 +78,9 @@ export function Dashboard() {
       return {
         subject: s,
         total: subjectChapters.length,
-        completed: subjectChapters.filter((c) => c.progress_level >= 1).length,
-        revised: subjectChapters.filter((c) => c.progress_level >= 2).length,
-        perfected: subjectChapters.filter((c) => c.progress_level >= 3).length,
+        lectures: subjectChapters.filter((c) => c.lectures_done).length,
+        notes: subjectChapters.filter((c) => c.notes_done).length,
+        revision: subjectChapters.filter((c) => c.revision_done).length,
       }
     })
     setSubjectStats(stats)
@@ -191,25 +191,31 @@ export function Dashboard() {
               <li key={s.subject.id} className="py-2.5">
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-sm font-medium text-ink-900">{s.subject.name}</span>
-                  <span className="text-xs text-ink-500">
-                    {s.completed} / {s.total} chapters completed
-                  </span>
+                  <span className="text-xs text-ink-500">{s.total} chapters</span>
                 </div>
-                <div className="flex gap-3 text-xs text-ink-500">
-                  <span>Revised: {s.revised}</span>
-                  <span>Perfected: {s.perfected}</span>
+                <div className="mb-1.5 flex gap-3 text-xs text-ink-500">
+                  <span>Lectures: {s.lectures}/{s.total}</span>
+                  <span>Notes: {s.notes}/{s.total}</span>
+                  <span>Revision: {s.revision}/{s.total}</span>
                 </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded bg-line">
-                  <div
-                    className="h-full bg-accent-500"
-                    style={{ width: `${s.total > 0 ? (s.completed / s.total) * 100 : 0}%` }}
-                  />
+                <div className="flex gap-1">
+                  <ProgressBar value={s.total > 0 ? (s.lectures / s.total) * 100 : 0} />
+                  <ProgressBar value={s.total > 0 ? (s.notes / s.total) * 100 : 0} />
+                  <ProgressBar value={s.total > 0 ? (s.revision / s.total) * 100 : 0} />
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+    </div>
+  )
+}
+
+function ProgressBar({ value }: { value: number }) {
+  return (
+    <div className="h-1.5 flex-1 overflow-hidden rounded bg-line">
+      <div className="h-full bg-accent-500" style={{ width: `${value}%` }} />
     </div>
   )
 }

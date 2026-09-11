@@ -222,7 +222,7 @@ function SubjectCard({
   const [savingBulk, setSavingBulk] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
-  const completed = chapters.filter((c) => c.progress_level >= 1).length
+  const completed = chapters.filter((c) => c.lectures_done && c.notes_done && c.revision_done).length
 
   async function handleBulkSave() {
     const lines = bulkText
@@ -319,14 +319,10 @@ function SubjectCard({
     }
   }
 
-  async function handleTickClick(chapter: Chapter, tickIndex: number) {
-    // tickIndex is 0, 1, or 2 representing the 1st, 2nd, 3rd tick.
-    const targetLevel = tickIndex + 1
-    const newLevel = chapter.progress_level >= targetLevel ? tickIndex : targetLevel
-
+  async function handleToggle(chapter: Chapter, field: 'lectures_done' | 'notes_done' | 'revision_done') {
     const { data, error } = await supabase
       .from('chapters')
-      .update({ progress_level: newLevel })
+      .update({ [field]: !chapter[field] })
       .eq('id', chapter.id)
       .select()
       .single()
@@ -369,8 +365,8 @@ function SubjectCard({
                 .map((chapter, idx, arr) => {
                   const examInfo = examInfoByChapter[chapter.id]
                   return (
-                    <li key={chapter.id} className="flex flex-col gap-1 py-2.5">
-                      <div className="flex items-center gap-2">
+                    <li key={chapter.id} className="flex flex-col gap-1.5 py-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="flex flex-1 items-center gap-2">
                           <button
                             onClick={() => handleMove(chapter, -1)}
@@ -395,9 +391,9 @@ function SubjectCard({
                           />
                         </div>
 
-                        <TickGroup
-                          progressLevel={chapter.progress_level}
-                          onTickClick={(i) => handleTickClick(chapter, i)}
+                        <ProgressToggles
+                          chapter={chapter}
+                          onToggle={(field) => handleToggle(chapter, field)}
                         />
 
                         <button
@@ -476,30 +472,39 @@ function SubjectCard({
   )
 }
 
-function TickGroup({
-  progressLevel,
-  onTickClick,
+const PROGRESS_FIELDS = [
+  { field: 'lectures_done' as const, label: 'Lectures' },
+  { field: 'notes_done' as const, label: 'Notes' },
+  { field: 'revision_done' as const, label: 'Revision' },
+]
+
+function ProgressToggles({
+  chapter,
+  onToggle,
 }: {
-  progressLevel: number
-  onTickClick: (tickIndex: number) => void
+  chapter: Chapter
+  onToggle: (field: 'lectures_done' | 'notes_done' | 'revision_done') => void
 }) {
-  const labels = ['Completed', 'Revised', 'Perfected']
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      {[0, 1, 2].map((i) => (
-        <button
-          key={i}
-          onClick={() => onTickClick(i)}
-          title={labels[i]}
-          className={`flex h-6 w-6 items-center justify-center rounded border text-xs font-medium transition-colors ${
-            progressLevel >= i + 1
-              ? 'border-accent-500 bg-accent-500 text-white'
-              : 'border-line bg-white text-ink-300'
-          }`}
-        >
-          ✓
-        </button>
-      ))}
+    <div className="flex shrink-0 items-center gap-1.5">
+      {PROGRESS_FIELDS.map(({ field, label }) => {
+        const active = chapter[field]
+        return (
+          <button
+            key={field}
+            onClick={() => onToggle(field)}
+            title={label}
+            className={`flex items-center gap-1 rounded border px-2 py-1 text-xs font-medium transition-colors ${
+              active
+                ? 'border-accent-500 bg-accent-500 text-white'
+                : 'border-line bg-white text-ink-500 hover:border-ink-300'
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${active ? 'bg-white' : 'bg-ink-300'}`} />
+            {label}
+          </button>
+        )
+      })}
     </div>
   )
 }

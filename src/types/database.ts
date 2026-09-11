@@ -20,7 +20,9 @@ export interface Chapter {
   user_id: string
   name: string
   position: number
-  progress_level: 0 | 1 | 2 | 3
+  lectures_done: boolean
+  notes_done: boolean
+  revision_done: boolean
   created_at: string
 }
 
